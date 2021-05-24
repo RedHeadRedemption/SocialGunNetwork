@@ -1,0 +1,171 @@
+<html>
+  <body>
+    <h1> Blog </h1>
+
+    <form id="sign">
+      <input id="alias" placeholder="username">
+      <input id="pass" type="password" placeholder="password">
+      <input id="in" type="submit" value="sign in">
+      <input id="up" type="button" value="sign up">
+    </form>
+    <input id="out" type="button" value="sign out">
+
+    
+
+
+    <form id="public">
+        <input id="title-public" placeholder="title">
+        <input id="say-public">
+        <input id="speak-public" type="submit" value="post-public">
+        <h3>Public Posts</h3>
+        <ul id="public-posts"></ul>
+    </form>
+
+    <form id="private">
+        <input id="title-private" placeholder="title">
+        <input id="say-private">
+        <input id="speak-private" type="submit" value="post-private">
+        <h3>Private Posts</h3>
+        <ul id="private-posts"></ul>
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/gun/examples/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+    <!-- script src="https://cdn.jsdelivr.net/npm/gun/lib/webrtc.js"></script -->
+    <script>
+        var gun = Gun('http://localhost:8765/gun');
+        var user = gun.user();
+
+        //Current User
+        var currentUser;
+
+        //Post Object
+        var postObj = {
+            title: "Title",
+            slug: "title",
+            content: "Post's content"
+        }
+
+        //Tags
+        var private = {
+            name: "private",
+            slug: "private"
+        }
+        var privateTag = gun.get('tag/' + private.slug).put(private);
+
+        var public = {
+            name: "public",
+            slug: "public"
+        }
+        publicTag = gun.get('tag/' + public.slug).put(public);
+
+        initilizePublicPosts = gun.get('tag/public').get('posts').map().once( (cb) => {
+
+            globalUI(cb);
+        })
+
+
+        $('#up').on('click', function(e){
+
+            user.create($('#alias').val(), $('#pass').val());
+        });
+
+        $('#sign').on('submit', function(e){
+
+            e.preventDefault();
+            user.auth($('#alias').val(), $('#pass').val(),() => {
+                user.get('alias').once((cb) => {
+                    currentUser = {
+                    name: cb,
+                    username: "@" + cb
+                    }
+                    currentUser = gun.get('user/' + currentUser.username).put(currentUser);
+
+                    $('h1').text("Blog of "+ cb);
+
+                    //debug
+                });               
+            });
+        });
+
+        $('#public').on('submit', function(e){
+
+            e.preventDefault();
+            if(!user.is){ return }
+
+            postObj ={
+                title: $('#title-public').val(),
+                slug: convertToSlug($('#title-public').val()),
+                content: $('#say-public').val()
+            }
+
+            var userPost = gun.get('post/' + postObj.slug).put(postObj);
+
+            userPost.get('author').put(currentUser).get('posts').set(userPost)
+            .get('tags').set(publicTag).get('posts').set(userPost);
+
+            $('#say-public').val("");
+            $('#title-public').val("");
+        });
+
+        $('#private').on('submit', function(e){
+
+            e.preventDefault();
+            if(!user.is){ return }
+
+            postObj ={
+                title: $('#title-private').val(),
+                slug: convertToSlug($('#title-private').val()),
+                content: $('#say-private').val()
+            }
+
+            var userPost = gun.get('post/' + postObj.slug).put(postObj);
+
+            userPost.get('author').put(currentUser).get('posts').set(userPost)
+            .get('tags').set(privateTag).get('posts').set(userPost);
+
+            $('#say-private').val("");
+            $('#title-private').val("");
+        });
+
+
+        $('#out').on('click', function(e){
+            e.preventDefault();
+            if(!user.is){ return }
+            user.leave();
+            $('#sign').show();
+            $('#private-posts').empty();
+            $('h1').text(" Blog ");
+            console.log("successful sign out");
+        });
+
+        function globalUI(post) {
+
+            var li = $('#' + post.slug).get(0) || $('<li>').attr('id', post.slug).appendTo($('#public-posts'));
+            $(li).text(post.content);
+        }
+
+        function UI(post){
+
+            var li = $('#' + post.slug).get(0) || $('<li>').attr('id', post.slug).appendTo($('#private-posts'));
+            $(li).text(post.content);
+        };
+
+        gun.on('auth', function(){
+
+           gun.get('tag/private').get('posts').map().once(UI);
+            $('#sign').hide();
+        });
+
+        function convertToSlug(Text)
+        {
+            return Text
+                .toLowerCase()
+                .replace(/[^\w ]+/g,'')
+                .replace(/ +/g,'-');
+        }
+
+    </script>
+  </body>
+</html>

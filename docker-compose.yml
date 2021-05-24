@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  gun_service:
+    image: node:14.17.0
+    working_dir: /workdir
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./:/workdir
+    command: bash -c "cd node_modules/gun && npm start"
