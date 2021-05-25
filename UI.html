@@ -222,14 +222,14 @@
             gun.get('user/' + user.userName).get('posts').map().once(cbPosts => {
                 i++
                 $('.user-posts').append([
-                    $('<div/>', {"class": "card gedf-card", "id": `${i}`})
+                    $('<div/>', {"class": "card gedf-card", "id": `post-${i}`})
                         .append('\
                             <div class="card-header">\
                                 <div class="d-flex justify-content-between align-items-center">\
                                     <div class="d-flex justify-content-between align-items-center">\
                                         <div class="ml-2">\
-                                            <div class="h5 m-0">@LeeCross</div>\
-                                            <div class="h7 text-muted">Miracles Lee Cross</div>\
+                                            <div class="h5 m-0" id="posts-username"></div>\
+                                            <div class="h7 text-muted" id="posts-fullname"></div>\
                                         </div>\
                                     </div>\
                                     <div>\
@@ -251,16 +251,21 @@
                             <div class="card-body">\
                                 <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i> 10 min ago</div>\
                                 <a class="card-link" >\
-                                    <h5 class="card-title"> Posts Title.</h5>\
+                                    <h5 class="card-title"></h5>\
                                 </a>\
-                                <p class="card-text"> Posts Content</p>\
-                                <div>\
+                                <p class="card-text" id="posts-content"></p>\
+                                <div id="posts-tags">\
                                     <span class="badge badge-primary">JavaScript</span>\
                                 </div>\
                             </div>\
                         ')
 
                 ]);
+            $(`#post-${i} #posts-username`).text("@"+user.userName);
+            $(`#post-${i} #posts-fullname`).text(user.fullName);
+            $(`#post-${i} #posts-content`).text(cbPosts.content);
+            $(`#post-${i} .card-title`).text(cbPosts.title+".");
+
             });
             
     };
