@@ -37,6 +37,7 @@
         var gun = Gun('http://localhost:8765/gun');
         var user = gun.user();
 
+        localStorage.clear();
         //Current User
         var currentUser;
 
@@ -58,7 +59,7 @@
             name: "public",
             slug: "public"
         }
-        publicTag = gun.get('tag/' + public.slug).put(public);
+        var publicTag = gun.get('tag/' + public.slug).put(public);
 
         initilizePublicPosts = gun.get('tag/public').get('posts').map().once( (cb) => {
 
