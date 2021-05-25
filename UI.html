@@ -64,11 +64,11 @@
                 <div class="card-body">
                     <div class="tab-content" id="myTabContent">
                         <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+                            
                             <div class="form-group">
-                                <label class="sr-only" for="message">post</label>
+                                <input  class="form-control" id="title" type="text" placeholder="Title" style="width: 50%;">
                                 <textarea class="form-control" id="message" rows="3" placeholder="What are you thinking?"></textarea>
                             </div>
-
                         </div>
                         <div class="tab-pane fade" id="images" role="tabpanel" aria-labelledby="images-tab">
                             <div class="form-group">
@@ -82,108 +82,51 @@
                     </div>
                     <div class="btn-toolbar justify-content-between">
                         <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">share</button>
+                            <button type="submit" class="btn btn-primary" id="share-button">share</button>
                         </div>                       
                     </div>
                 </div>
             </div>
             <!-- End New Post-->
-
-            <!--- \\\\\\\Post-->
-            <div class="card gedf-card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="ml-2">
-                                <div class="h5 m-0">@LeeCross</div>
-                                <div class="h7 text-muted">Miracles Lee Cross</div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="btn-group">
-                                <button id="btnGroupDrop1" type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">
-                                    <i class="fa fa-globe"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">
-                                    <a class="dropdown-item" href="#"><i class="fa fa-globe"></i> Public</a>
-                                    <a class="dropdown-item" href="#"><i class="fa fa-user"></i> Hide</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="card-body">
-                    <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i> 10 min ago</div>
-                    <a class="card-link" >
-                        <h5 class="card-title"> Lorem ipsum dolor sit amet consectetur adipisicing elit. Velit consectetur
-                            deserunt illo esse distinctio.</h5>
-                    </a>
-
-                    <p class="card-text">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam omnis nihil, aliquam est, voluptates officiis iure soluta
-                        alias vel odit, placeat reiciendis ut libero! Quas aliquid natus cumque quae repellendus. Lorem
-                        ipsum dolor sit amet consectetur adipisicing elit. Ipsa, excepturi. Doloremque, reprehenderit!
-                        Quos in maiores, soluta doloremque molestiae reiciendis libero expedita assumenda fuga quae.
-                        Consectetur id molestias itaque facere? Hic!
-                    </p>
-                    <div>
-                        <span class="badge badge-primary">JavaScript</span>
-                        <span class="badge badge-primary">Android</span>
-                        <span class="badge badge-primary">PHP</span>
-                        <span class="badge badge-primary">Node.js</span>
-                        <span class="badge badge-primary">Ruby</span>
-                        <span class="badge badge-primary">Paython</span>
-                    </div>
-                </div>
+            <div class="form-group user-posts">
+                
             </div>
-            <!-- Post /////-->
-
-
-
-
 
         </div>
     </div>
 </div>
 
 <script>
-    var gun = Gun('http://localhost:8765/gun');
-    var user = gun.user();
+    let gun = Gun('http://localhost:8765/gun');
+    let user = gun.user();
 
     localStorage.clear();
+
     //Current User
-    var currentUser;
+    let currentUser = {
+            userName: "UserName",
+            fullName: "The Full name of this Guy",
+            interests: "Deloper of web applications, JavaScript, PHP, Java, Python, Ruby"
+        };
 
     //Post Object
-    var postObj = {
-        title: "Title",
-        slug: "title",
-        content: "Post's content"
-    }
+    let postObj = {
+            title: "Title",
+            content: "Post's content for this post by this user",
+            tags: ["JavaScript","Android","PHP","Python"],
+            slug: "title"
+        };
 
-    //Tags
-    var private = {
-        name: "private",
-        slug: "private"
-    }
-    var privateTag = gun.get('tag/' + private.slug).put(private);
 
-    var public = {
-        name: "public",
-        slug: "public"
-    }
-    var publicTag = gun.get('tag/' + public.slug).put(public);
+    // initilizePublicPosts = gun.get('tag/public').get('posts').map().once( (cb) => {
 
-    initilizePublicPosts = gun.get('tag/public').get('posts').map().once( (cb) => {
-
-        globalUI(cb);
-    })
+    //     globalUI(cb);
+    // })
 
 
     $('#up').on('click', function(e){
 
+        e.preventDefault();
         user.create($('#alias').val(), $('#pass').val());
     });
 
@@ -193,58 +136,46 @@
         e.preventDefault();
         user.auth($('#alias').val(), $('#pass').val(),() => {
             user.get('alias').once((cb) => {
-                currentUser = {
-                    userName: cb,
-                    fullName: "The Full name of this Guy",
-                    interests:"Developer of web applications, JavaScript, PHP, Java, Python, Ruby"
-                }
-                
 
-                signedInUi(currentUser);
-                currentUser = gun.get('user/' + currentUser.username).put(currentUser);
+                currentUser.userName = cb;
+                gun.get('user/' + cb).put(currentUser);
+
+                signedInUi(cb);
             });               
         });
     });
 
-    $('#public').on('submit', function(e){
+    $('#share-button').on('click', function(e){
 
-        e.preventDefault();
         if(!user.is){ return }
 
-        postObj ={
-            title: $('#title-public').val(),
-            slug: convertToSlug($('#title-public').val()),
-            content: $('#say-public').val()
-        }
+        postObj = {
+            title: $('#title').val(),
+            content: $('#message').val(), 
+            slug: convertToSlug($('#title').val())};
 
-        var userPost = gun.get('post/' + postObj.slug).put(postObj);
-
-        userPost.get('author').put(currentUser).get('posts').set(userPost)
-        .get('tags').set(publicTag).get('posts').set(userPost);
-
-        $('#say-public').val("");
-        $('#title-public').val("");
+        gun.get('user/' + currentUser.userName).get('posts').get('post/' + postObj.slug).put(postObj);
     });
 
-    $('#private').on('submit', function(e){
+    // $('#private').on('submit', function(e){
 
-        e.preventDefault();
-        if(!user.is){ return }
+    //     e.preventDefault();
+    //     if(!user.is){ return }
 
-        postObj ={
-            title: $('#title-private').val(),
-            slug: convertToSlug($('#title-private').val()),
-            content: $('#say-private').val()
-        }
+    //     postObj ={
+    //         title: $('#title-private').val(),
+    //         slug: convertToSlug($('#title-private').val()),
+    //         content: $('#say-private').val()
+    //     }
 
-        var userPost = gun.get('post/' + postObj.slug).put(postObj);
+    //     var userPost = gun.get('post/' + postObj.slug).put(postObj);
 
-        userPost.get('author').put(currentUser).get('posts').set(userPost)
-        .get('tags').set(privateTag).get('posts').set(userPost);
+    //     userPost.get('author').put(currentUser).get('posts').set(userPost)
+    //     .get('tags').set(privateTag).get('posts').set(userPost);
 
-        $('#say-private').val("");
-        $('#title-private').val("");
-    });
+    //     $('#say-private').val("");
+    //     $('#title-private').val("");
+    // });
 
 
     $('#out').on('click', function(e){
@@ -255,21 +186,23 @@
     });
 
     function signedInUi(user) {
-        console.log("signed user : "+ JSON.stringify(user));
 
         //Show user Card
-        $('#user-card').append('\
-            <div class="card-body">\
-                <div class="h5" id="userName"></div>\
-                <div class="h7 text-muted" id="fullName"></div>\
-                <div class="h7" id="interests"></div>\
-            </div>');
-        //Change user Info
-        $('#userName').text("@"+ user.userName);
-        $('#fullName').text(user.fullName || "");
-        $('#interests').text(user.interests || "");
+        gun.get('user/' + user).once(cbUser => {
+            //Show all user Posts
+            showUserPosts(cbUser);
+            $('#user-card').append([
+                $('<div/>', {"class": "card-body"}).append([
+                    $('<div/>', {"class": "h5"}).html(`@${cbUser.userName}`),
+                    $('<div/>', {"class": "h7 text-muted"}).html(`${cbUser.fullName || ""}`),
+                    $('<div/>', {"class": "h7"}).html(`${cbUser.interests || ""} `)
+                ])
+            ]);
+        })
+
         //Show sign out button
         $('#out').show();
+        //Show all user Posts
     }
 
     function signedOutUi() {
@@ -277,27 +210,63 @@
         //Show sign in/up buttons
         $('#verification').show();
         $('#out').hide();
-
-        $('#private-posts').empty();
-        //Hide user Info
+        //Empty user Info
         $('#user-card').empty();
+        //Empty user posts
+        $('.user-posts').empty();
     }
 
-    function globalUI(post) {
+    function showUserPosts(user){
 
-        var li = $('#' + post.slug).get(0) || $('<li>').attr('id', post.slug).appendTo($('#public-posts'));
-        $(li).text(post.content);
-    }
+        let i = 0;
+            gun.get('user/' + user.userName).get('posts').map().once(cbPosts => {
+                i++
+                $('.user-posts').append([
+                    $('<div/>', {"class": "card gedf-card", "id": `${i}`})
+                        .append('\
+                            <div class="card-header">\
+                                <div class="d-flex justify-content-between align-items-center">\
+                                    <div class="d-flex justify-content-between align-items-center">\
+                                        <div class="ml-2">\
+                                            <div class="h5 m-0">@LeeCross</div>\
+                                            <div class="h7 text-muted">Miracles Lee Cross</div>\
+                                        </div>\
+                                    </div>\
+                                    <div>\
+                                        <div class="btn-group">\
+                                            <button id="btnGroupDrop1" type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"\
+                                                aria-expanded="false">\
+                                                <i class="fa fa-globe"></i>\
+                                            </button>\
+                                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">\
+                                                <a class="dropdown-item" href="#"><i class="fa fa-globe"></i> Public</a>\
+                                                <a class="dropdown-item" href="#"><i class="fa fa-user"></i> Hide</a>\
+                                            </div>\
+                                        </div>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        ')
+                        .append('\
+                            <div class="card-body">\
+                                <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i> 10 min ago</div>\
+                                <a class="card-link" >\
+                                    <h5 class="card-title"> Posts Title.</h5>\
+                                </a>\
+                                <p class="card-text"> Posts Content</p>\
+                                <div>\
+                                    <span class="badge badge-primary">JavaScript</span>\
+                                </div>\
+                            </div>\
+                        ')
 
-    function UI(post){
-
-        var li = $('#' + post.slug).get(0) || $('<li>').attr('id', post.slug).appendTo($('#private-posts'));
-        $(li).text(post.content);
+                ]);
+            });
+            
     };
 
     gun.on('auth', function(){
 
-       gun.get('tag/private').get('posts').map().once(UI);
         $('#verification').hide();
     });
 
