@@ -20,20 +20,20 @@
         crossorigin="anonymous"></script>
         
 <nav class="navbar navbar-light bg-white">
-    <a class="navbar-brand">Blog</a>
-    <form class="form-inline" id="verification">
-        <div class="input-group" >
+    <a class="navbar-brand">The Social Web</a>
+    <form class="form-inline">
+        <div class="input-group" id="verification">
             <input type="text" class="form-control" id="alias" placeholder="username">
             <input type="password" class="form-control" id="pass"  placeholder="password">
 
-            <div class="input-group-append" >
+            <div class="input-group-append" id="auth">
                 <input class="btn btn-outline-primary" id="in" type="submit" value="sign in">
                 <input class="btn btn-outline-primary" id="up" type="button" value="sign up">
                 
             </div>
-            <div class="input-group-append" >
-                <input class="btn btn-outline-primary" id="out" type="button" value="sign out">
-            </div>
+        </div>
+        <div class="input-group-append" >
+            <input class="btn btn-outline-primary" id="out" type="button" value="sign out" style="display: none;">
         </div>
     </form>
 
@@ -44,22 +44,10 @@
     <div class="row">
         <!---- User Profile -->
         <div class="col-md-3">
-            <div class="card">
-                <div class="card-body">
-                    <div class="h5">@LeeCross</div>
-                    <div class="h7 text-muted">Fullname : Miracles Lee Cross</div>
-                    <div class="h7">Developer of web applications, JavaScript, PHP, Java, Python, Ruby, Java, Node.js,
-                        etc.
-                    </div>
-                </div>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Vestibulum at eros</li>
-                </ul>
-            </div>
+            <div class="card" id="user-card"></div>
         </div>
         <!---- End User Profile -->
         <div class="col-md-6 gedf-main">
-
             <!--- New Post-->
             <div class="card gedf-card">
                 <div class="card-header">
@@ -200,21 +188,20 @@
     });
 
 
-    $('#verification').on('click', function(e){
-        console.log("signing in");
+    $('#auth').on('click', function(e){
 
         e.preventDefault();
         user.auth($('#alias').val(), $('#pass').val(),() => {
             user.get('alias').once((cb) => {
                 currentUser = {
-                name: cb,
-                username: "@" + cb
+                    userName: cb,
+                    fullName: "The Full name of this Guy",
+                    interests:"Developer of web applications, JavaScript, PHP, Java, Python, Ruby"
                 }
+                
+
+                signedInUi(currentUser);
                 currentUser = gun.get('user/' + currentUser.username).put(currentUser);
-
-                $('.navbar-brand').text("Blog of "+ cb);
-
-                //debug
             });               
         });
     });
@@ -264,11 +251,37 @@
         e.preventDefault();
         if(!user.is){ return }
         user.leave();
-        $('#sign').show();
-        $('#private-posts').empty();
-        $('h1').text(" Blog ");
-        console.log("successful sign out");
+        signedOutUi();
     });
+
+    function signedInUi(user) {
+        console.log("signed user : "+ JSON.stringify(user));
+
+        //Show user Card
+        $('#user-card').append('\
+            <div class="card-body">\
+                <div class="h5" id="userName"></div>\
+                <div class="h7 text-muted" id="fullName"></div>\
+                <div class="h7" id="interests"></div>\
+            </div>');
+        //Change user Info
+        $('#userName').text("@"+ user.userName);
+        $('#fullName').text(user.fullName || "");
+        $('#interests').text(user.interests || "");
+        //Show sign out button
+        $('#out').show();
+    }
+
+    function signedOutUi() {
+
+        //Show sign in/up buttons
+        $('#verification').show();
+        $('#out').hide();
+
+        $('#private-posts').empty();
+        //Hide user Info
+        $('#user-card').empty();
+    }
 
     function globalUI(post) {
 
