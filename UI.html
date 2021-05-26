@@ -99,9 +99,7 @@
 <script>
     let gun = Gun('http://localhost:8765/gun');
     let user = gun.user();
-
-    localStorage.clear();
-
+    
     //Current User
     let currentUser = {
             userName: "UserName",
@@ -111,17 +109,13 @@
 
     //Post Object
     let postObj = {
+            author: {userName: currentUser.userName, fullName : currentUser.fullName},
             title: "Title",
             content: "Post's content for this post by this user",
             tags: ["JavaScript","Android","PHP","Python"],
             slug: "title"
         };
 
-
-    // initilizePublicPosts = gun.get('tag/public').get('posts').map().once( (cb) => {
-
-    //     globalUI(cb);
-    // })
 
 
     $('#up').on('click', function(e){
@@ -150,32 +144,16 @@
         if(!user.is){ return }
 
         postObj = {
+            author: {userName: currentUser.userName, fullName : currentUser.fullName},
             title: $('#title').val(),
             content: $('#message').val(), 
             slug: convertToSlug($('#title').val())};
+            
 
-        gun.get('user/' + currentUser.userName).get('posts').get('post/' + postObj.slug).put(postObj);
+
+        gun.get('posts').set(postObj);
     });
 
-    // $('#private').on('submit', function(e){
-
-    //     e.preventDefault();
-    //     if(!user.is){ return }
-
-    //     postObj ={
-    //         title: $('#title-private').val(),
-    //         slug: convertToSlug($('#title-private').val()),
-    //         content: $('#say-private').val()
-    //     }
-
-    //     var userPost = gun.get('post/' + postObj.slug).put(postObj);
-
-    //     userPost.get('author').put(currentUser).get('posts').set(userPost)
-    //     .get('tags').set(privateTag).get('posts').set(userPost);
-
-    //     $('#say-private').val("");
-    //     $('#title-private').val("");
-    // });
 
 
     $('#out').on('click', function(e){
@@ -186,11 +164,10 @@
     });
 
     function signedInUi(user) {
-
         //Show user Card
         gun.get('user/' + user).once(cbUser => {
             //Show all user Posts
-            showUserPosts(cbUser);
+            showUserPosts();
             $('#user-card').append([
                 $('<div/>', {"class": "card-body"}).append([
                     $('<div/>', {"class": "h5"}).html(`@${cbUser.userName}`),
@@ -216,58 +193,66 @@
         $('.user-posts').empty();
     }
 
-    function showUserPosts(user){
+    function showUserPosts(){
 
         let i = 0;
-            gun.get('user/' + user.userName).get('posts').map().once(cbPosts => {
-                i++
-                $('.user-posts').append([
-                    $('<div/>', {"class": "card gedf-card", "id": `post-${i}`})
-                        .append('\
-                            <div class="card-header">\
-                                <div class="d-flex justify-content-between align-items-center">\
-                                    <div class="d-flex justify-content-between align-items-center">\
-                                        <div class="ml-2">\
-                                            <div class="h5 m-0" id="posts-username"></div>\
-                                            <div class="h7 text-muted" id="posts-fullname"></div>\
-                                        </div>\
-                                    </div>\
-                                    <div>\
-                                        <div class="btn-group">\
-                                            <button id="btnGroupDrop1" type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"\
-                                                aria-expanded="false">\
-                                                <i class="fa fa-globe"></i>\
-                                            </button>\
-                                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">\
-                                                <a class="dropdown-item" href="#"><i class="fa fa-globe"></i> Public</a>\
-                                                <a class="dropdown-item" href="#"><i class="fa fa-user"></i> Hide</a>\
-                                            </div>\
-                                        </div>\
-                                    </div>\
-                                </div>\
-                            </div>\
-                        ')
-                        .append('\
-                            <div class="card-body">\
-                                <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i> 10 min ago</div>\
-                                <a class="card-link" >\
-                                    <h5 class="card-title"></h5>\
-                                </a>\
-                                <p class="card-text" id="posts-content"></p>\
-                                <div id="posts-tags">\
-                                    <span class="badge badge-primary">JavaScript</span>\
-                                </div>\
-                            </div>\
-                        ')
+        gun.get('posts').map().once(cbPosts => {
 
-                ]);
-            $(`#post-${i} #posts-username`).text("@"+user.userName);
-            $(`#post-${i} #posts-fullname`).text(user.fullName);
+            i++
+            $('.user-posts').append([
+                $('<div/>', {"class": "card gedf-card", "id": `post-${i}`})
+                    .append('\
+                        <div class="card-header">\
+                            <div class="d-flex justify-content-between align-items-center">\
+                                <div class="d-flex justify-content-between align-items-center">\
+                                    <div class="ml-2">\
+                                        <div class="h5 m-0" id="posts-username"></div>\
+                                        <div class="h7 text-muted" id="posts-fullname"></div>\
+                                    </div>\
+                                </div>\
+                                <div>\
+                                    <div class="btn-group">\
+                                        <button id="btnGroupDrop1" type="button" class="btn btn-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"\
+                                            aria-expanded="false">\
+                                            <i class="fa fa-globe"></i>\
+                                        </button>\
+                                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="btnGroupDrop1">\
+                                            <a class="dropdown-item" href="#"><i class="fa fa-globe"></i> Public</a>\
+                                            <a class="dropdown-item" href="#"><i class="fa fa-user"></i> Hide</a>\
+                                        </div>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        </div>\
+                    ')
+                    .append('\
+                        <div class="card-body">\
+                            <div class="text-muted h7 mb-2"> <i class="fa fa-clock-o"></i> 10 min ago</div>\
+                            <a class="card-link" >\
+                                <h5 class="card-title"></h5>\
+                            </a>\
+                            <p class="card-text" id="posts-content"></p>\
+                            <div id="posts-tags">\
+                                <span class="badge badge-primary">JavaScript</span>\
+                            </div>\
+                        </div>\
+                    ')
+
+            ]);
+        
+            gun.get(cbPosts.author).once(cbAuthor => {
+                console.log(" user: " + JSON.stringify(cbAuthor,null,2));
+                $(`#post-${i} #posts-username`).text("@"+cbAuthor.userName);
+                $(`#post-${i} #posts-fullname`).text(cbAuthor.fullName);
+            })
+            
+            
+            console.log(" posts: " + JSON.stringify(cbPosts,null,2));
             $(`#post-${i} #posts-content`).text(cbPosts.content);
             $(`#post-${i} .card-title`).text(cbPosts.title+".");
+                    
 
-            });
-            
+        });      
     };
 
     gun.on('auth', function(){
